@@ -2,33 +2,42 @@ import { Request, Response } from "express";
 import { createGetEventsController } from "./get-events";
 
 describe("createGetEventsController",  () => {
-    it("should pass page 2 and page size 5 to getEvents", async () => {
-        const mockCreateEventDal = {
-            getEvents: jest.fn().mockResolvedValue([])
+    it("should return the requested page and the total number of events", async () => {
+        const event = { id: 6, name: "Jazz concert" };
+
+        const createEventDalMock = {
+            getEvents: jest.fn().mockResolvedValue([event]),
+            countEvents: jest.fn().mockResolvedValue(6)
         };
 
-        const mockCreateTicketDAL = {
-            getTicketsByEvent: jest.fn()
+        const createTicketDALMock = {
+            getTicketsByEvent: jest.fn().mockResolvedValue([])
         }
 
         const controller = createGetEventsController({
-            eventsDAL: mockCreateEventDal,
-            ticketsDAL: mockCreateTicketDAL
+            eventsDAL: createEventDalMock,
+            ticketsDAL: createTicketDALMock
         });
 
         const query: Request['query'] = {page: '2', pageSize: '5'}
         const req = { query } as Request
 
-        const res = { json: jest.fn() } as unknown as Response;
+        const json = jest.fn();
+        const res = { json } as unknown as Response;
 
         await controller(req, res);
 
-        expect(mockCreateEventDal.getEvents).toHaveBeenCalledWith(2, 5)
+        expect(createEventDalMock.getEvents).toHaveBeenCalledWith(2, 5)
+        expect(json).toHaveBeenCalledWith({
+            items: [{ id: 6, name: "Jazz concert", availableTickets: [] }],
+            total: 6
+        })
     })
 
     it("should use the default page and page size when query parameters are missing", async () => {
         const mockCreateEventDal = {
-            getEvents: jest.fn().mockResolvedValue([])
+            getEvents: jest.fn().mockResolvedValue([]),
+            countEvents: jest.fn().mockResolvedValue(0),
         };
 
         const mockCreateTicketDAL = {
@@ -52,7 +61,8 @@ describe("createGetEventsController",  () => {
 
     it("should respond 400 and skip getEvents when page is zero", async () => {
         const mockCreateEventDal = {
-            getEvents: jest.fn().mockResolvedValue([])
+            getEvents: jest.fn().mockResolvedValue([]),
+            countEvents: jest.fn().mockResolvedValue(0),
         };
 
         const mockCreateTicketDAL = {
@@ -79,7 +89,8 @@ describe("createGetEventsController",  () => {
 
     it("should respond 400 and skip getEvents when pageSize is zero", async () => {
         const mockCreateEventDal = {
-            getEvents: jest.fn().mockResolvedValue([])
+            getEvents: jest.fn().mockResolvedValue([]),
+            countEvents: jest.fn().mockResolvedValue(0),
         };
 
         const mockCreateTicketDAL = {

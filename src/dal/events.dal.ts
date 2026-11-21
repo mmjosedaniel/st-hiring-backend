@@ -3,6 +3,7 @@ import { Event } from '../entity/event';
 
 export interface EventDAL {
   getEvents(page: number, pageSize: number): Promise<Event[]>;
+  countEvents(): Promise<number>
 }
 
 export const createEventDAL = (knex: Knex): EventDAL => {
@@ -15,5 +16,9 @@ export const createEventDAL = (knex: Knex): EventDAL => {
       .limit(pageSize)
       .offset(offset);
     },
+    async countEvents(): Promise<number> {
+      const [row] = await knex("events").count({total: "*"});
+      return Number(row.total)
+    }
   };
 }

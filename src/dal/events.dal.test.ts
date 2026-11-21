@@ -26,4 +26,20 @@ describe("createEventDAL", () => {
             expect(result).toEqual(rows);
         })
     })
+
+    describe("countEvents", () => {
+        it("should count all events and return the total", async () => {
+            const query = {
+                count: jest.fn().mockResolvedValue([{ total: "6" }]),
+            }
+            
+            const knexMock = jest.fn().mockReturnValue(query);
+            const eventsDAL = createEventDAL(knexMock as unknown as Knex);
+
+            const total = await eventsDAL.countEvents();
+
+            expect(total).toBe(6);
+        })
+    }) 
 })
+

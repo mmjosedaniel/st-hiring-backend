@@ -24,11 +24,15 @@ export const createGetEventsController = ({
     return
   }
 
-  const events = await eventsDAL.getEvents(page, pageSize);
+  const [events, total] = await Promise.all([
+    eventsDAL.getEvents(page, pageSize),
+    eventsDAL.countEvents()
+  ]);
+  // TODO: solve this n+1 problem.
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
     const tickets = await ticketsDAL.getTicketsByEvent(event.id);
     events[i].availableTickets = tickets.filter(ticket => ticket.status === 'available');
   }
-  res.json(events);
+  res.json({items: events, total});
 };
