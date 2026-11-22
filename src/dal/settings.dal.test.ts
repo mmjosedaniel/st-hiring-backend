@@ -9,6 +9,7 @@ describe("settingsDAL", () => {
                     eventsPerPage: 25,
                     timeZone: 'America/New_York',
                 }),
+                updateOne: jest.fn().mockResolvedValue({ acknowledged: true }),
             };
 
             const settingsDAL = createSettingsDAL(collection);
@@ -19,6 +20,31 @@ describe("settingsDAL", () => {
                 eventsPerPage: 25,
                 timeZone: 'America/New_York',
             });
+        })
+    })
+
+    describe("saveSettings", () => {
+        it("should create or update the app settings", async () => {
+            const settings = {
+                eventsPerPage: 25,
+                timeZone: 'America/New_York',
+            };
+
+            const collection = {
+                findOne: jest.fn(),
+                updateOne: jest.fn().mockResolvedValue({ acknowledged: true })
+            };
+
+            const settingsDAL = createSettingsDAL(collection);
+
+            const result = await settingsDAL.saveSettings(settings);
+
+            expect(collection.updateOne).toHaveBeenCalledWith(
+                { _id: 'app-settings' },
+                { $set: settings },
+                { upsert: true }
+            )
+            expect(result).toEqual(settings);
         })
     })
 })
