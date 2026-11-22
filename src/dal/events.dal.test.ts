@@ -40,6 +40,6 @@ describe("createEventDAL", () => {
 
             expect(total).toBe(6);
         })
-    }) 
+    })
 })
 

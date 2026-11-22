@@ -28,11 +28,31 @@ export const createGetEventsController = ({
     eventsDAL.getEvents(page, pageSize),
     eventsDAL.countEvents()
   ]);
-  // TODO: solve this n+1 problem.
-  for (let i = 0; i < events.length; i++) {
-    const event = events[i];
-    const tickets = await ticketsDAL.getTicketsByEvent(event.id);
-    events[i].availableTickets = tickets.filter(ticket => ticket.status === 'available');
+
+  if (events.length === 0) {
+    res.json({ items: [], total });
+    return
   }
+
+  // I propose adding a paginated GET /events/:eventId/tickets endpoint.
+  // GET /events would return only event summaries. When a user opens an event's
+  // details, the frontend would fetch the first page of available tickets for
+  // that event and load additional pages on demand.
+
+  const eventIds = events.map(event => event.id);
+
+  const tickets = await ticketsDAL.getTicketsByEvent(eventIds);
+
+  const eventsById = new Map(events.map(event => [event.id, event]))
+
+  for (const event of events) {
+    event.availableTickets = [];
+  }
+  
+  for (const ticket of tickets) {
+    const event = eventsById.get(ticket.event_id);
+    event?.availableTickets.push(ticket);
+  }
+  
   res.json({items: events, total});
 };
