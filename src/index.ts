@@ -9,6 +9,7 @@ import { createGetEventsController } from './controllers/get-events';
 import { MongoClient } from 'mongodb';
 import { createSettingsDAL, SettingsDocument } from './dal/settings.dal';
 import { createGetSettingsController } from './controllers/get-settings';
+import { createPostSettingsController } from './controllers/post-settings';
 
 const Knex = knex(dbConfig.development);
 
@@ -29,6 +30,8 @@ const settingsCollection = mongoClient.db("seetickets").collection<SettingsDocum
 const settingsDAL = createSettingsDAL(settingsCollection);
 const getSettings =createGetSettingsController({settingsDAL})
 
+const postSettings = createPostSettingsController({ settingsDAL })
+
 app.use(cors());
 app.use(express.json());
 
@@ -40,6 +43,10 @@ app.use('/events', createGetEventsController({ eventsDAL: eventDAL, ticketsDAL: 
 
 app.get('/settings', (req, res, next) => {
   getSettings(req, res).catch(next);
+})
+
+app.post('/settings', (req, res, next) => {
+  postSettings(req, res).catch(next);
 })
 
 app.use('/', (_req, res) => {
