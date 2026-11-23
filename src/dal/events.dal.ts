@@ -2,13 +2,23 @@ import { Knex } from 'knex';
 import { Event } from '../entity/event';
 
 export interface EventDAL {
-  getEvents(limit: number): Promise<Event[]>;
+  getEvents(page: number, pageSize: number): Promise<Event[]>;
+  countEvents(): Promise<number>
 }
 
 export const createEventDAL = (knex: Knex): EventDAL => {
   return {
-    async getEvents(limit): Promise<Event[]> {
-      return await knex<Event>('events').select('*').limit(limit);
+    async getEvents(page, pageSize): Promise<Event[]> {
+      const offset = (page -1) * pageSize;
+      return await knex<Event>('events')
+      .select('*')
+      .orderBy('id', 'asc')
+      .limit(pageSize)
+      .offset(offset);
     },
+    async countEvents(): Promise<number> {
+      const [row] = await knex("events").count({total: "*"});
+      return Number(row.total)
+    }
   };
 }
