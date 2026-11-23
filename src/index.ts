@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { ErrorRequestHandler } from 'express';
+import express from 'express';
 import cors from 'cors';
 import { knex } from 'knex';
 import dbConfig from './knexfile';
@@ -10,6 +10,7 @@ import { MongoClient } from 'mongodb';
 import { createSettingsDAL, SettingsDocument } from './dal/settings.dal';
 import { createGetSettingsController } from './controllers/get-settings';
 import { createPostSettingsController } from './controllers/post-settings';
+import { handleError } from './middleware/handle-error';
 
 const Knex = knex(dbConfig.development);
 
@@ -60,26 +61,6 @@ app.post('/settings', (req, res, next) => {
 app.use('/', (_req, res) => {
   res.json({ message: 'Hello API' });
 });
-
-const handleError: ErrorRequestHandler = (error, _req, res, next) => {
-  if (res.headersSent) {
-    next(error);
-    return
-  }
-
-  const status = error?.status ?? error?.statusCode;
-
-  if (Number.isInteger(status) && status >= 400 && status < 500) {
-    const message = error.type === 'entity.parse.failed'
-      ? 'Invalid JSON body'
-      : 'Invalid request';
-
-    res.status(status).json({ message });
-    return;
-  }
-
-  res.status(500).json({ message: 'Internal server error' });
-}
 
 app.use(handleError);
 
